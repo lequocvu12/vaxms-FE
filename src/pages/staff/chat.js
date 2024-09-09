@@ -14,7 +14,9 @@ const StaffChat = ()=>{
     const [itemUser, setItemUser] = useState([]);
     const [itemChat, setItemChat] = useState([]);
     const [user, setUser] = useState(null);
+    const [email, setEmail] = useState(null);
 
+    
     useEffect(() => {
         const getItemUser= async() =>{
             var response = await getMethod('/api/chat/staff/getAllUserChat');
@@ -22,6 +24,20 @@ const StaffChat = ()=>{
             setItemUser(result)
         };
         getItemUser();
+
+        const getMess= async() =>{
+            var uls = new URL(document.URL)
+            var id = uls.searchParams.get("user");
+            var email = uls.searchParams.get("email");
+            if(id != null && email != null){
+                var response = await getMethod('/api/chat/staff/getListChat?idreciver='+id);
+                var result = await response.json();
+                setItemChat(result)
+                setEmail(email)
+            }
+        };
+        getMess();
+
         var userlc = localStorage.getItem("user")
         var email = JSON.parse(userlc).email
         const sock = new SockJS('http://localhost:8080/hello');
@@ -48,8 +64,10 @@ const StaffChat = ()=>{
     
     
     const sendMessage = () => {
+        var uls = new URL(document.URL)
+        var id = uls.searchParams.get("user");
         client.publish({
-            destination: '/app/hello/'+user.id,
+            destination: '/app/hello/'+id,
             body: document.getElementById("contentmess").value,
         });
         append();
@@ -57,8 +75,10 @@ const StaffChat = ()=>{
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
+            var uls = new URL(document.URL)
+            var id = uls.searchParams.get("user");
           client.publish({
-            destination: '/app/hello/'+user.id,
+            destination: '/app/hello/'+id,
             body: document.getElementById("contentmess").value,
           });
           append();
@@ -83,20 +103,19 @@ const StaffChat = ()=>{
         var result = await response.json();
         setItemUser(result)
     };
-
-    async function loadMessage(user){
-        var response = await getMethod('/api/chat/staff/getListChat?idreciver='+user.id);
-        var result = await response.json();
-        setItemChat(result)
-        setUser(user);
+    
+    async function loadMessage(u){
+        window.location.href = 'chat?user='+u.id+'&email='+u.email;
     };
 
     function appendTinNhanDen(mess, Idsender) {
-        console.log("dender "+Idsender);
-        console.log("userid: "+user.id);
-        if(Idsender != user.id){
+        var uls = new URL(document.URL)
+        var id = uls.searchParams.get("user");
+        
+        if(Idsender != id){
             return;
         }
+
         const newChatElement = document.createElement('p'); 
         newChatElement.className = "mychat";
         newChatElement.textContent = mess; 
@@ -106,6 +125,8 @@ const StaffChat = ()=>{
         document.getElementById("contentmess").value = ''
     }
 
+    console.log(user);
+    
 
 
     return (
@@ -123,8 +144,8 @@ const StaffChat = ()=>{
                             <tbody id="listuserchat">
                             {itemUser.map((item, index)=>{
                                 return <tr class="pointer trhoverchat" onClick={()=>loadMessage(item.user)}>
-                                    <td class="col45"><img src={avatar} class="imgavatarchat"/></td>
-                                    <td>{item.user.email}<span class="timechat">{item.timestamp}</span></td>
+                                    <td class="col45" onClick={()=>loadMessage(item.user)}><img src={avatar} class="imgavatarchat"/></td>
+                                    <td onClick={()=>loadMessage(item.user)}>{item.user.email}<span class="timechat">{item.timestamp}</span></td>
                                 </tr>
                             })}
                             </tbody>
@@ -132,10 +153,10 @@ const StaffChat = ()=>{
                     </div>
                     <div class="col-sm-9">
                         {
-                        user==null?<></>:
+                        email==null?<></>:
                         <div class="mainchatadmin" id="mainchatadmin">
                             <div class="header-chat-admin form-control">
-                                {user.email}
+                                {email}
                             </div>
                             <div class="contentchatadmin" id="listchatadmin">
                                 {itemChat.map((item, index)=>{
