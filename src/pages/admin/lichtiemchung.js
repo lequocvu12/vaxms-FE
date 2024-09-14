@@ -110,7 +110,7 @@ const AdminLichTiemChung = ()=>{
                                 <td>{item.limitPeople}</td>
                                 <td>
                                     <i onClick={()=>deleteLich(item.id)} class="fa fa-trash iconaction"></i>
-                                    <a href={"add-lich-tiem-chung?id="+item.id}><i class="fa fa-edit iconaction"></i></a>
+                                    <i onClick={()=>window.location.href='add-lich-tiem-chung?id='+item.id} class="fa fa-edit iconaction pointer"></i>
                                 </td>
                             </tr>
                          })}

@@ -15,15 +15,19 @@ import 'swiper/css/pagination';
 import { Navigation, Pagination } from 'swiper/modules';
 
 
-
+var scheduleSize = 10;
+var url = '';
 function TraCuuLichTiem(){
     const [item, setItem] = useState([]);
     const [schedule, setSchedule] = useState(null);
+    const [pageCount, setpageCount] = useState(0);
     useEffect(()=>{
         const getItem = async() =>{
-            var response = await getMethod('/api/vaccine-schedule/public/next-schedule');
+            url = '/api/vaccine-schedule/public/next-schedule?size='+scheduleSize;
+            var response = await getMethod(url+'&page=0');
             var result = await response.json();
-            setItem(result)
+            setItem(result.content)
+            setpageCount(result.totalPages)
         };
         getItem();
     }, []);
@@ -31,9 +35,23 @@ function TraCuuLichTiem(){
 
     async function searchSchedule() {
         var param = document.getElementById("searchschedule").value
-        var response = await getMethod('/api/vaccine-schedule/public/next-schedule?param='+param);
+        url = '/api/vaccine-schedule/public/next-schedule?size='+scheduleSize+'&param='+param;
+        var response = await getMethod(url+'&page=0');
         var result = await response.json();
-        setItem(result)
+        setItem(result.content)
+        setpageCount(result.totalPages)
+    }
+
+    async function pageation(page) {
+        var response = await getMethod(url+'&page='+page);
+        var result = await response.json();
+        setItem(result.content)
+        setpageCount(result.totalPages)
+    }
+
+    const handlePageClick = async (data)=>{
+        var currentPage = data.selected
+        await pageation(currentPage);
     }
 
     return(
@@ -91,6 +109,22 @@ function TraCuuLichTiem(){
                             })}
                         </tbody>
                     </table>
+                    <ReactPaginate 
+                        marginPagesDisplayed={2} 
+                        pageCount={pageCount} 
+                        onPageChange={handlePageClick}
+                        containerClassName={'pagination'} 
+                        pageClassName={'page-item'} 
+                        pageLinkClassName={'page-link'}
+                        previousClassName='page-item'
+                        previousLinkClassName='page-link'
+                        nextClassName='page-item'
+                        nextLinkClassName='page-link'
+                        breakClassName='page-item'
+                        breakLinkClassName='page-link' 
+                        previousLabel='Trang trước'
+                        nextLabel='Trang sau'
+                        activeClassName='active'/>
                 </div>
             </div>
             <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

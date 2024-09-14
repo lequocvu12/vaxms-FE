@@ -783,12 +783,18 @@
     bottom: 0;
 }
 .inputchatadmin{
-    width: 90%;
+    width: 80%;
     float: left;
     border-radius: 5px;
     padding: 3px 10px;
     height: 40px;
     border: 1px solid #d1d1d1;
+}
+.imgchatbtnadmin{
+    width: 8%;
+    margin-left: 2%;
+    cursor: pointer;
+    font-size: 22px;
 }
 .btn-send-message{
     width: 8%;
@@ -828,4 +834,16 @@
 }
 .centerchatstaff{
     height: 50px;
+}
+.mychatimg{
+    max-width: 70%;
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 20px;
+}
+.adminimg{
+    max-width: 70%;
+    display: inline-block;
+    align-self: flex-end;
+    margin-top: 20px;
 }

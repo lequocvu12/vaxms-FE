@@ -97,6 +97,11 @@ async function taoLichTiemChung(event) {
     }
 }
 
+function splitTimeStamp(date){
+    var str = date.split("T");
+    return str[1]+" "+str[0]
+}
+
     return(
      <div className='container-fluid'>
         <div className='container-web'>
@@ -168,8 +173,8 @@ async function taoLichTiemChung(event) {
                                             <div key={item.id}
                                                 className={`singletgtiem ${activeIndex === index ? 'activetiem' : ''}`}
                                                 onClick={() => setVacxinChoose(item, index)}>
-                                                Từ: {item.startDate} <br/>
-                                                Đến: {item.endtDate} <br/>
+                                                Từ: {splitTimeStamp(item.startDate)} <br/>
+                                                Đến: {splitTimeStamp(item.endDate)} <br/>
                                                 Địa điểm:{item.center.centerName}
                                             </div>
                                         </div>
@@ -181,7 +186,14 @@ async function taoLichTiemChung(event) {
                                 </div>
                             </div>
                             <div className='col-sm-6'>
-                                <button id='btndangkytiem' className='btn btn-primary form-control'>Đăng Ký Tiêm Chủng</button>
+                                <div id='btndangkytiem'>
+                                    <label className='lb-form-dky-tiem'><span>*</span> Hình thức thanh toán</label>
+                                    <select className='form-control'>
+                                        <option value={1}>Thanh toán ngay</option>
+                                        <option value={0}>Thanh toán sau khi tiêm</option>
+                                    </select><br/>
+                                    <button className='btn btn-primary form-control'>Đăng Ký Tiêm Chủng</button>
+                                </div>
                             </div>
                         </div>
                     </form>

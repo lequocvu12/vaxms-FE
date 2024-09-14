@@ -143,6 +143,7 @@ body{
 }
 #btndangkytiem{
     margin-top: 30px;
+    display: none;
 }
 .pointer{
     cursor: pointer;
@@ -501,25 +502,33 @@ body{
 
 .chat-footer {
     padding: 10px;
-    display: flex;
-    gap: 10px;
 }
 
 .chat-footer input {
-    flex: 1;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    width: 60% !important;
+}
+.chat-footer i {
+    // flex: 1;
+    cursor: pointer;
+    width: 20%;
+    padding-left: 10px;
 }
 
 .chat-footer button {
-    background-color: #007bff;
-    color: white;
+    // flex: 1;
+    color: #007bff;
     border: none;
     padding: 8px 12px;
     border-radius: 5px;
     cursor: pointer;
+    width: 20%;
+    background: none;
 }
+
+
 #listchat {
     font-size: 13px;
     display: flex;
@@ -614,4 +623,19 @@ body{
 }
 .yellow{
     color: #9c8f22;
+}
+.hidden{
+    visibility: hidden;
+}
+.mychatimg{
+    max-width: 70%;
+    display: inline-block;
+    align-self: flex-end;
+    margin-top: 20px;
+}
+.adminimg{
+    max-width: 70%;
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 20px;
 }

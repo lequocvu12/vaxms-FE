@@ -5,7 +5,7 @@ import avatar from '../../assest/images/avatar.png'
 import ReactPaginate from 'react-paginate';
 import {toast } from 'react-toastify';
 import Select from 'react-select';
-import {getMethod, postMethod, postMethodPayload} from '../../services/request';
+import {getMethod, postMethod, postMethodPayload, uploadSingleFile} from '../../services/request';
 import Swal from 'sweetalert2'
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -22,6 +22,8 @@ function toggleChat() {
         chatBox.style.display = "none";
         btnopenchat.style.display = ''
     }
+    var scroll_to_bottom = document.getElementById('scroll-to-bottom');
+    scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
 }
 
 function ChatFrame(){
@@ -51,7 +53,13 @@ function ChatFrame(){
           onConnect: () => {
             console.log("WebSocket connected successfully!");
             stompClient.subscribe('/users/queue/messages', (msg) => {
-              appendTinNhanDen(msg.body)
+              var isFile = msg.headers.isFile
+              if(Number(isFile) === Number(0)){
+                appendTinNhanDen(msg.body)
+              }
+              else{
+                appendFileTinNhanDen(msg.body)
+              }
             });
           },
           connectHeaders: {
@@ -73,6 +81,23 @@ function ChatFrame(){
         });
         append();
     };
+    
+    const sendFileMessage = async () => {
+        const file = document.getElementById("btnsendfile").files[0];
+        if (file) {
+          if (isImageFile(file)) {
+          } else {
+            toast.warning('Đây không phải là file ảnh');
+            return;
+          }
+        }
+        var link = await uploadSingleFile(document.getElementById("btnsendfile"));
+        appendFile(link)
+        client.publish({
+          destination: '/app/file/-10/'+document.getElementById("btnsendfile").files[0].name,
+          body: link,
+        });
+    };
 
     const handleKeyDown = (event) => {
       if (event.key === 'Enter') {
@@ -81,7 +106,7 @@ function ChatFrame(){
           body: document.getElementById("contentmess").value,
         });
         append();
-      }
+    }
   };
 
 
@@ -97,6 +122,16 @@ function ChatFrame(){
         document.getElementById("contentmess").value = ''
     }
 
+    function appendFile(link) {
+        const newChatElement = document.createElement('img'); 
+        newChatElement.className = "mychatimg";
+        newChatElement.src = link; 
+
+        document.getElementById('listchat').appendChild(newChatElement);
+        var scroll_to_bottom = document.getElementById('scroll-to-bottom');
+        scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
+    }
+
     function appendTinNhanDen(mess) {
         const newChatElement = document.createElement('p'); 
         newChatElement.className = "adminchat";
@@ -105,7 +140,21 @@ function ChatFrame(){
         document.getElementById('listchat').appendChild(newChatElement);
         var scroll_to_bottom = document.getElementById('scroll-to-bottom');
         scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
-        document.getElementById("contentmess").value = ''
+    }
+
+    function appendFileTinNhanDen(mess) {
+      const newChatElement = document.createElement('img'); 
+      newChatElement.className = "adminimg";
+      newChatElement.src = mess; 
+
+      document.getElementById('listchat').appendChild(newChatElement);
+      var scroll_to_bottom = document.getElementById('scroll-to-bottom');
+      scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
+    }
+
+    function isImageFile(file) {
+      const fileType = file.type;
+      return fileType.startsWith('image/');
     }
 
     var token = localStorage.getItem("token");
@@ -125,17 +174,29 @@ function ChatFrame(){
                 <div id="listchat">
                 {itemChat.map((item, index)=>{
                     if(item.sender.authorities.name == "Customer"){
-                      return <p class="mychat">{item.content}</p>
+                      if(item.isFile != true){
+                        return <p class="mychat">{item.content}</p>
+                      }
+                      else{
+                          return <img class="mychatimg" src={item.content}/>
+                      }
                     }
                     else{
-                      return <p class="adminchat">{item.content}</p>
+                      if(item.isFile != true){
+                        return <p class="adminchat">{item.content}</p>
+                      }
+                      else{
+                          return <img class="adminchatimg" src={item.content}/>
+                      }
                     }
                 })}
                 </div>
             </div>
+            <input onChange={sendFileMessage} type='file' className='hidden' id='btnsendfile'/>
             <div class="chat-footer">
                 <input  onKeyDown={handleKeyDown} type="text" id="contentmess" placeholder="Nhập tin nhắn..." />
-                <button id="sendmess" onClick={()=>sendMessage()}>Gửi</button>
+                <i className='fa fa-image imgchatbtn' onClick={()=>document.getElementById("btnsendfile").click()}></i>
+                <button id="sendmess" onClick={()=>sendMessage()}><i className='fa fa-paper-plane'></i></button>
             </div>
         </div>
     </div>

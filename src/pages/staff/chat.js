@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Client } from '@stomp/stompjs';
 import avatar from '../../assest/images/avatar.png'
 import SockJS from 'sockjs-client';
-import {getMethod, postMethod, postMethodPayload} from '../../services/request';
+import {getMethod, postMethod, postMethodPayload, uploadSingleFile} from '../../services/request';
 
 const StaffChat = ()=>{
     const [message, setMessage] = useState('');
@@ -37,7 +37,7 @@ const StaffChat = ()=>{
             }
         };
         getMess();
-
+        
         var userlc = localStorage.getItem("user")
         var email = JSON.parse(userlc).email
         const sock = new SockJS('http://localhost:8080/hello');
@@ -47,7 +47,13 @@ const StaffChat = ()=>{
             console.log("WebSocket connected successfully!");
             stompClient.subscribe('/users/queue/messages', (msg) => {
                 var Idsender = msg.headers.sender
-                appendTinNhanDen(msg.body, Idsender)
+                var isFile = msg.headers.isFile
+                if(Number(isFile) === Number(0)){
+                    appendTinNhanDen(msg.body, Idsender)
+                }
+                else{
+                    appendFileTinNhanDen(msg.body, Idsender)
+                }
             });
           },
           connectHeaders: {
@@ -61,8 +67,6 @@ const StaffChat = ()=>{
           stompClient.deactivate();
         };
     }, []);
-    
-    
     const sendMessage = () => {
         var uls = new URL(document.URL)
         var id = uls.searchParams.get("user");
@@ -72,6 +76,27 @@ const StaffChat = ()=>{
         });
         append();
     };
+
+        
+    const sendFileMessage = async () => {
+        const file = document.getElementById("btnsendfile").files[0];
+        if (file) {
+          if (isImageFile(file)) {
+          } else {
+            toast.warning('Đây không phải là file ảnh');
+            return;
+          }
+        }
+        var link = await uploadSingleFile(document.getElementById("btnsendfile"));
+        appendFile(link)
+        var uls = new URL(document.URL)
+        var id = uls.searchParams.get("user");
+        client.publish({
+          destination: '/app/file/'+id+'/'+document.getElementById("btnsendfile").files[0].name,
+          body: link,
+        });
+    };
+    
 
     const handleKeyDown = (event) => {
         if (event.key === 'Enter') {
@@ -94,6 +119,16 @@ const StaffChat = ()=>{
         var scroll_to_bottom = document.getElementById('listchatadmin');
         scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
         document.getElementById("contentmess").value = ''
+    }
+
+    function appendFile(link) {
+        const newChatElement = document.createElement('img'); 
+        newChatElement.className = "adminimg";
+        newChatElement.src = link; 
+
+        document.getElementById('listchatadmin').appendChild(newChatElement);
+        var scroll_to_bottom = document.getElementById('listchatadmin');
+        scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
     }
 
 
@@ -122,12 +157,28 @@ const StaffChat = ()=>{
         document.getElementById('listchatadmin').appendChild(newChatElement);
         var scroll_to_bottom = document.getElementById('listchatadmin');
         scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
-        document.getElementById("contentmess").value = ''
     }
 
-    console.log(user);
-    
+    function appendFileTinNhanDen(mess, Idsender) {
+        var uls = new URL(document.URL)
+        var id = uls.searchParams.get("user");
+        
+        if(Idsender != id){
+            return;
+        }
+        const newChatElement = document.createElement('img'); 
+        newChatElement.className = "mychatimg";
+        newChatElement.src = mess; 
+        document.getElementById('listchatadmin').appendChild(newChatElement);
+        var scroll_to_bottom = document.getElementById('listchatadmin');
+        scroll_to_bottom.scrollTop = scroll_to_bottom.scrollHeight;
+    }
 
+    function isImageFile(file) {
+        const fileType = file.type;
+        return fileType.startsWith('image/');
+      }
+  
 
     return (
         <>
@@ -161,16 +212,28 @@ const StaffChat = ()=>{
                             <div class="contentchatadmin" id="listchatadmin">
                                 {itemChat.map((item, index)=>{
                                     if(item.sender.authorities.name == "Customer"){
-                                    return <p class="mychat">{item.content}</p>
+                                        if(item.isFile != true){
+                                            return <p class="mychat">{item.content}</p>
+                                        }
+                                        else{
+                                            return <img class="mychatimg" src={item.content}/>
+                                        }
                                     }
                                     else{
-                                    return <p class="adminchat">{item.content}</p>
+                                        if(item.isFile != true){
+                                            return <p class="adminchat">{item.content}</p>
+                                        }
+                                        else{
+                                            return <img class="adminchatimg" src={item.content}/>
+                                        }
                                     }
                                 })}
                             </div>
                             <div className='centerchatstaff'></div>
+                            <input onChange={sendFileMessage} type='file' className='hidden' id='btnsendfile'/>
                             <div class="chat-area-footer">
                                 <input onKeyDown={handleKeyDown} type="text" id="contentmess" class="inputchatadmin" placeholder="write message" />
+                                <i className='fa fa-image imgchatbtnadmin' onClick={()=>document.getElementById("btnsendfile").click()}></i>
                                 <button onClick={()=>sendMessage()} class="btn-send-message" id="sendmess"><i class="fa fa-paper-plane"></i></button>
                             </div>
                         </div>
