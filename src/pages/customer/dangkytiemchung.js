@@ -75,6 +75,7 @@ async function taoLichTiemChung(event) {
         "dob": event.target.elements.ngaysinhnt.value,
         "phone": event.target.elements.sdtnt.value,
         "address": event.target.elements.diachint.value,
+        "regisTime": event.target.elements.registime.value,
         "vaccineSchedule": {"id":vacxinScheduleChoose.id},
     }
     console.log(lichtiem)
@@ -88,12 +89,35 @@ async function taoLichTiemChung(event) {
         "notifyUrl":"http://localhost:3000/thong-bao",
     }
 
-    var res = await postMethodPayload('/api/payment/customer/create-url-payment', payment)
-    if (res.status < 300) {
-        var result = await res.json();
-        window.open(result.url, '_blank');
-    } else {
-        toast.error("Tạo link thanh toán thất bại");
+    var loaithanhtoan = event.target.elements.loaithanhtoan.value
+    if(loaithanhtoan == 1){
+        var res = await postMethodPayload('/api/payment/customer/create-url-payment', payment)
+        if (res.status < 300) {
+            var result = await res.json();
+            window.open(result.url, '_blank');
+        } else {
+            toast.error("Tạo link thanh toán thất bại");
+        }
+    }
+    if(loaithanhtoan == 0){
+        var res = await postMethodPayload('/api/customer-schedule/customer/create-offline', lichtiem)
+        if (res.status < 300) {
+            Swal.fire({
+                title: "Thông báo",
+                text: "Đã đăng ký lịch tiêm thành công!",
+                preConfirm: () => {
+                    window.location.href = 'tai-khoan'
+                }
+            });
+        } else {
+            if(res.status == 417){
+                var result = await res.json();
+                toast.error(result.defaultMessage);
+            }
+            else{
+                toast.error("Đăng ký lịch tiêm thất bại");
+            }
+        }
     }
 }
 
@@ -185,14 +209,22 @@ function splitTimeStamp(date){
                                     </div>
                                 </div>
                             </div>
-                            <div className='col-sm-6'>
-                                <div id='btndangkytiem'>
-                                    <label className='lb-form-dky-tiem'><span>*</span> Hình thức thanh toán</label>
-                                    <select className='form-control'>
-                                        <option value={1}>Thanh toán ngay</option>
-                                        <option value={0}>Thanh toán sau khi tiêm</option>
-                                    </select><br/>
-                                    <button className='btn btn-primary form-control'>Đăng Ký Tiêm Chủng</button>
+                            <div id='btndangkytiem'>
+                                <div className='row'>
+                                    <div className='col-sm-6'>
+                                        <label className='lb-form-dky-tiem'><span>*</span> Hình thức thanh toán</label>
+                                        <select name='loaithanhtoan' className='form-control'>
+                                            <option value={1}>Thanh toán ngay</option>
+                                            <option value={0}>Thanh toán sau khi tiêm</option>
+                                        </select>
+                                    </div>
+                                    <div className='col-sm-6'>
+                                        <label className='lb-form-dky-tiem'><span>*</span> Chọn giờ tiêm</label>
+                                        <input name='registime' className='form-control' type='datetime-local'/>
+                                    </div>
+                                    <div className='col-sm-6'>
+                                        <br/><button className='btn btn-primary form-control'>Đăng Ký Tiêm Chủng</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
